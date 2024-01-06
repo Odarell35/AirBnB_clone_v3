@@ -99,6 +99,11 @@ class TestFileStorage(unittest.TestCase):
         first_state_id = list(model.storage.all(State).values())[0].id
         get_id = models.storage.get(State, first_state_id)
         self.assertEqual(get_id.id, first_state_id)
+        models.storage.delete(get_id)
+        models.storage.save()
+        models.storage.close()
+        get_id = models.storage.get(State, first_state_id)
+        self.assertEqual(get_id, None)
 
 
 class TestFileStorage2(unittest.TestCase):
