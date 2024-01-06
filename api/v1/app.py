@@ -19,6 +19,11 @@ def closing(cont):
     storage.close()
 
 
+@app.errorhandler(404)
+def page_not_found(err):
+    """handler"""
+    return {"error": "Not found"}, 404
+
 if __name__ == "__main__":
     import os
     if os.getenv("HBNB_API_HOST"):
