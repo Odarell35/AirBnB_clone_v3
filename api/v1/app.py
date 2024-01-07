@@ -24,6 +24,13 @@ def page_not_found(err):
     """handler"""
     return {"error": "Not found"}, 404
 
+@app.errorhandler(400)
+def page_not_found(err):
+    """handler"""
+    msg = err.description
+    return msg, 400
+
+
 if __name__ == "__main__":
     import os
     if os.getenv("HBNB_API_HOST"):
