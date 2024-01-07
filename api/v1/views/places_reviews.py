@@ -4,7 +4,11 @@ Review object that handles all default RESTFul API actions
 """
 from flask import abort, jsonify, request
 from api.v1.views import app_views
-from models import storage, Review, Place, User
+from models import storage
+from models.place import Place
+from models.city import City
+from models.user import User
+from models.review import Review
 
 @app_views.route('/places/<place_id>/reviews', methods=['GET', 'POST'])
 def place_reviews(place_id):
@@ -61,12 +65,10 @@ def review(review_id):
         data = request.get_json()
         if not data:
             abort(400, 'Not a JSON')
-
-        keys_to_ignore = ['id', 'user_id', 'place_id', 'created_at', 'updated_at']
-
-        for key, value in data.items():
-            if key not in keys_to_ignore:
-                setattr(review, key, value)
-
-        storage.save()
-        return jsonify(review.to_dict()), 200
+        review = storage.get(Review, review_id)
+        if review:
+            review.text = data.get("text", review.text)
+            review.save()
+            return jsonify(review.to_dict()), 200
+        else:
+            abort(404)      
