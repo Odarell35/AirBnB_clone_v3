@@ -4,14 +4,16 @@ Place objects that handles all default RESTFul API actions
 """
 
 from flask import Flask, jsonify, request, abort
-from models import Place, City, User
+from api.v1.views import app_views
+from models import storage
+from models.place import Place
+from models.city import City
+from models.user import User
 
-app = Flask(__name__)
 
-
-@app.route('/api/v1/cities/<city_id>/places', methods=['GET'])
+@app_views.route('/cities/<city_id>/places', methods=['GET'], strict_slashes=False)
 def get_places_by_city(city_id):
-	"""Retrieves the list of all Place objects of a City"""
+    """Retrieves the list of all Place objects of a City"""
     city = City.get(city_id)
     if not city:
         abort(404)
@@ -19,18 +21,18 @@ def get_places_by_city(city_id):
     return jsonify([place.to_dict() for place in places])
 
 
-@app.route('/api/v1/places/<place_id>', methods=['GET'])
+@app_views.route('/places/<place_id>', methods=['GET'], strict_slashes=False)
 def get_place(place_id):
-	"""Retrieves a Place object"""
+    """Retrieves a Place object"""
     place = Place.get(place_id)
     if not place:
         abort(404)
     return jsonify(place.to_dict())
 
 
-@app.route('/api/v1/places/<place_id>', methods=['DELETE'])
+@app_views.route('/places/<place_id>', methods=['DELETE'], strict_slashes=False)
 def delete_place(place_id):
-	"""Deletes a Place object"""
+    """Deletes a Place object"""
     place = Place.get(place_id)
     if not place:
         abort(404)
@@ -38,9 +40,9 @@ def delete_place(place_id):
     return jsonify({}), 200
 
 
-@app.route('/api/v1/cities/<city_id>/places', methods=['POST'])
+@app_views.route('/cities/<city_id>/places', methods=['POST'], strict_slashes=False)
 def create_place(city_id):
-	"""Creates a Place"""
+    """Creates a Place"""
     city = City.get(city_id)
     if not city:
         abort(404)
@@ -66,9 +68,9 @@ def create_place(city_id):
     return jsonify(place.to_dict()), 201
 
 
-@app.route('/api/v1/places/<place_id>', methods=['PUT'])
+@app_views.route('/places/<place_id>', methods=['PUT'], strict_slashes=False)
 def update_place(place_id):
-	"""Updates a Place object"""
+    """Updates a Place object"""
     place = Place.get(place_id)
     if not place:
         abort(404)
