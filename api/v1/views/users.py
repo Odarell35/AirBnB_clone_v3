@@ -4,7 +4,8 @@ Create a new view for User object that handles all default RESTFul API actions
 """
 from flask import Flask, jsonify, abort, request
 from api.v1.views import app_views
-from models import storage, User
+from models import storage
+from models.users import User
 
 @app_views.route('/users', methods=['GET'], strict_slashes=False)
 def get_users():
@@ -50,18 +51,15 @@ def create_user():
 def update_user(user_id):
     """Updates a User object."""
     user = storage.get(User, user_id)
-    if user is None:
-        abort(404)
-    
     data = request.get_json()
     if not data:
         abort(400, 'Not a JSON')
-    
-    # Ignore specified keys
-    ignore_keys = ['id', 'email', 'created_at', 'updated_at']
-    for key, value in data.items():
-        if key not in ignore_keys:
-            setattr(user, key, value)
-    
-    storage.save()
-    return jsonify(user.to_dict()), 200
+    if user:
+        user.password = data.get("password", user.password)
+        user.first_name = data.get("first_name", user.first_name)
+        user.last_name = data.get("last_name", user.last_name)
+        user.save()
+        return jsonify(user.to_dict()), 200
+    else:
+        abort(404)
+   
