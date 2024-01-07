@@ -40,3 +40,31 @@ def del_state(state_id):
     else:
         abort(404)
 
+
+@app_views.route("/states", strict_slashes=False, methods=["POST"])
+def create_state():
+    """creates state"""
+    json_data = request.get_json()
+    if json_data:
+        new = State(**json_data)
+        new.save()
+        return jsonify(new.to_dict()), 201
+    else:
+        abort(400, "Not a JSON")
+    if "name" not in json_data:
+        abort(400, "Missing name")
+
+
+@app_views.route("/states/<state_id>", strict_slashes=False, methods=["PUT"])
+def update_state(state_id):
+    """updates instance"""
+    json_data = request.get_json()
+    if not json_data:
+        abort(400, "Not a JSON")
+    prev_state = storage.get(State, state_id)
+    if prev_state:
+        prev_state.name = json_data.get("name", prev_state.name)
+        prev_state.save()
+        return jsonify(prev_state.to_dict()), 200
+    else:
+        abort (404)
