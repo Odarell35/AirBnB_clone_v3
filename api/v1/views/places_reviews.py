@@ -30,12 +30,12 @@ def fetch_review(review_id):
     if obj:
         return jsonify(obj.to_dict())
     else:
-        abort(404    
+        abort(404)
 
 
 @app_views.route("/reviews/<review_id>", strict_slashes=False, methods=["DELETE"])
-def del_review(review_id):
-        """deletes review"""
+def delete_review(review_id):
+    """deletes review"""
     obj = storage.get(Review, review_id)
     if obj:
             storage.delete(obj)
@@ -78,6 +78,6 @@ def update_r(review_id):
     if old_r:
         old_r.test = json_data.get('test', old_r.text)
         old_r.save()
-         return jsonify(old_r.to_dict()), 200
-else:
-    abort (404)
+        return jsonify(old_r.to_dict()), 200
+    else:
+        abort (404)
