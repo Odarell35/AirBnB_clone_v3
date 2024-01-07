@@ -10,78 +10,89 @@ from models.place import Place
 from models.city import City
 from models.user import User
 
+from api.v1.views import app_views
+from models import storage
+from models.place import Place
+from models.city import City
+from models.user import User
 
-@app_views.route('/cities/<city_id>/places', methods=['GET'], strict_slashes=False)
-def get_places_by_city(city_id):
-    """Retrieves the list of all Place objects of a City"""
-    city = City.get(city_id)
-    if not city:
+
+@app_views.route("cities/<city_id>/places", strict_slashes=False,
+                 methods=['GET'])
+def get_place(city_id=None):
+    """
+    Returns list of Place objects linked to any City
+    """
+    city = storage.get(City, city_id)
+    if city is None:
         abort(404)
-    places = Place.get_places_by_city(city_id)
-    return jsonify([place.to_dict() for place in places])
+    cities = []
+    for item in city.places:
+        cities.append(item.to_dict())
+    return jsonify(cities)
 
 
-@app_views.route('/places/<place_id>', methods=['GET'], strict_slashes=False)
-def get_place(place_id):
-    """Retrieves a Place object"""
-    place = Place.get(place_id)
-    if not place:
+@app_views.route("/places/<place_id>", strict_slashes=False, methods=['GET'])
+def get_place_id(place_id):
+    '''
+    Get the Place by place id
+    '''
+    place = storage.get(Place, place_id)
+    if place is None:
         abort(404)
     return jsonify(place.to_dict())
 
 
-@app_views.route('/places/<place_id>', methods=['DELETE'], strict_slashes=False)
-def delete_place(place_id):
-    """Deletes a Place object"""
-    place = Place.get(place_id)
-    if not place:
+@app_views.route("/places/<place_id>", strict_slashes=False,
+                 methods=['DELETE'])
+def delete_place(place_id=None):
+    """
+    Delete Place from database
+    """
+    places = storage.get(Place, place_id)
+    if places is None:
         abort(404)
-    place.delete()
+    places.delete()
+    storage.save()
     return jsonify({}), 200
 
 
-@app_views.route('/cities/<city_id>/places', methods=['POST'], strict_slashes=False)
-def create_place(city_id):
-    """Creates a Place"""
-    city = City.get(city_id)
-    if not city:
+@app_views.route("/cities/<city_id>/places", strict_slashes=False,
+                 methods=['POST'])
+def post_place(city_id):
+    """
+    fetches and post a Place in city
+    """
+    if storage.get(City, city_id) is None:
         abort(404)
-
-    data = request.get_json()
-    if not data:
-        abort(400, 'Not a JSON')
-
-    user_id = data.get('user_id')
-    if not user_id:
-        abort(400, 'Missing user_id')
-    user = User.get(user_id)
-    if not user:
+    if not request.get_json():
+        abort(400, "Not a JSON")
+    if "user_id" not in request.get_json():
+        abort(400, "Missing user_id")
+    if storage.get(User, request.get_json()["user_id"]) is None:
         abort(404)
-
-    name = data.get('name')
-    if not name:
-        abort(400, 'Missing name')
-
-    place = Place(city_id=city_id, user_id=user_id, name=name)
-    place.save()
-    
-    return jsonify(place.to_dict()), 201
+    if "name" not in request.get_json():
+        abort(400, "Missing name")
+    places = Place(**request.get_json())
+    places.city_id = city_id
+    places.save()
+    return jsonify(places.to_dict()), 201
 
 
-@app_views.route('/places/<place_id>', methods=['PUT'], strict_slashes=False)
-def update_place(place_id):
-    """Updates a Place object"""
-    place = Place.get(place_id)
-    if not place:
+@app_views.route("/places/<place_id>", strict_slashes=False,
+                 methods=["PUT"])
+def update_place(place_id=None):
+    """ Update user objects
+    """
+    key = "Place." + str(place_id)
+    if key not in storage.all(Place).keys():
         abort(404)
+    if not request.get_json():
+        abort(400, "Not a JSON")
 
-    data = request.get_json()
-    if not data:
-        abort(400, 'Not a JSON')
-
-    for key, value in data.items():
-        if key not in ['id', 'user_id', 'city_id', 'created_at', 'updated_at']:
+    place = storage.get(Place, place_id)
+    for key, value in request.get_json().items():
+        if key not in ["id", "user_id", "city_id", "created_at", "updated_at"]:
             setattr(place, key, value)
-
     place.save()
     return jsonify(place.to_dict()), 200
